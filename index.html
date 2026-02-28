@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hostel Help Portal</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #fff6d1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+button {
+    padding: 12px 20px;
+    margin: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.student {
+    background: #884f3b;
+    color: white;
+}
+
+.warden {
+    background: #6a883b;
+    color: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🏠 Hostel Ease</h1>
+    <h5>A hostel help system</h5>
+    <p>Select Your Role</p>
+
+    <button class="student" onclick="window.location.href='student.html'">
+        Student Portal
+    </button>
+
+    <button class="warden" onclick="window.location.href='warden.html'">
+        Warden Portal
+    </button>
+</div>
+
+</body>
+</html>

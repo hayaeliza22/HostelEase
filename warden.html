@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hostel Help - Warden Portal</title>
+
+<style>
+body { margin:0; font-family:Arial; display:flex; background:#fff6d1; }
+.sidebar { width:220px; background:#6a883b; color:white; height:100vh; padding:20px; }
+.sidebar h2 { margin-bottom:30px; }
+.sidebar ul { list-style:none; padding:0; }
+.sidebar li { padding:12px 0; cursor:pointer; }
+.sidebar li:hover { background:#3749b3; padding-left:10px; }
+
+.main { flex:1; padding:30px; }
+
+.card-container { display:flex; gap:20px; flex-wrap:wrap; }
+.card {
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    width:220px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+table {
+    width:100%;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+th, td { padding:12px; text-align:left; }
+th { background:#1e3a8a; color:white; }
+
+.hidden { display:none; }
+</style>
+</head>
+
+<body>
+<div class="sidebar">
+    <h2>🛡 Warden Panel</h2>
+    <ul>
+        <li onclick="showPage('dashboard')">Dashboard</li>
+        <li onclick="showPage('complaints')">Complaints</li>
+        <li onclick="showPage('leave')">Leave Requests</li>
+        <li onclick="showPage('suggestions')">Suggestions</li>
+        <li onclick="showPage('sos')">SOS Alerts</li>
+    </ul>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+    <h1>Warden Dashboard</h1>
+    <div class="card-container">
+        <div class="card">
+            <h3>📌 Complaints</h3>
+            <p id="complaintCount">Loading...</p>
+        </div>
+        <div class="card">
+            <h3>📅 Leave Requests</h3>
+            <p id="leaveCount">Loading...</p>
+        </div>
+        <div class="card">
+            <h3>💬 Suggestions</h3>
+            <p id="suggestionCount">Loading...</p>
+        </div>
+        <div class="card">
+            <h3>🚨 SOS Alerts</h3>
+            <p id="sosCount">Loading...</p>
+        </div>
+    </div>
+</div>
+
+<!-- COMPLAINTS -->
+<div id="complaints" class="hidden">
+    <h2>Student Complaints</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="complaintTable">
+            <tr><td colspan="4">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- LEAVE -->
+<div id="leave" class="hidden">
+    <h2>Leave Requests</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Reason</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="leaveTable">
+            <tr><td colspan="3">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- SUGGESTIONS -->
+<div id="suggestions" class="hidden">
+    <h2>Anonymous Suggestions</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody id="suggestionTable">
+            <tr><td>Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- SOS -->
+<div id="sos" class="hidden">
+    <h2>🚨 SOS Alerts</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody id="sosTable">
+            <tr><td colspan="2">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+<script>
+let refreshInterval;
+
+function showPage(pageId) {
+    const pages = ['dashboard','complaints','leave','suggestions','sos'];
+    pages.forEach(page => document.getElementById(page).classList.add('hidden'));
+    document.getElementById(pageId).classList.remove('hidden');
+
+    if (pageId === 'dashboard') loadDashboard();
+    if (pageId === 'complaints') loadComplaints();
+    if (pageId === 'leave') loadLeave();
+    if (pageId === 'suggestions') loadSuggestions();
+    if (pageId === 'sos') loadSOS();
+}
+
+function loadDashboard() {
+    fetch('http://127.0.0.1:5000/dashboard_counts')
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("complaintCount").innerText = data.complaints || 0;
+        document.getElementById("leaveCount").innerText = data.leave || 0;
+        document.getElementById("suggestionCount").innerText = data.suggestions || 0;
+        document.getElementById("sosCount").innerText = data.sos || 0;
+    });
+}
+
+function loadComplaints() {
+    fetch('http://127.0.0.1:5000/get_complaints')
+    .then(res => res.json())
+    .then(data => {
+        const table = document.getElementById("complaintTable");
+        table.innerHTML = '';
+
+        if (!data.length) {
+            table.innerHTML = '<tr><td colspan="4">No complaints</td></tr>';
+            return;
+        }
+
+        data.forEach(item => {
+            table.innerHTML += `
+            <tr>
+                <td>${item.student_name}</td>
+                <td>${item.type}</td>
+                <td>${item.description}</td>
+                <td>
+                    <select onchange="updateComplaint(${item.id}, this.value)">
+                        <option ${item.status==='Pending'?'selected':''}>Pending</option>
+                        <option ${item.status==='Approved'?'selected':''}>Approved</option>
+                        <option ${item.status==='Rejected'?'selected':''}>Rejected</option>
+                        <option ${item.status==='Resolved'?'selected':''}>Resolved</option>
+                    </select>
+                </td>
+            </tr>`;
+        });
+    });
+}
+
+function loadLeave() {
+    fetch('http://127.0.0.1:5000/get_leave')
+    .then(res => res.json())
+    .then(data => {
+        const table = document.getElementById("leaveTable");
+        table.innerHTML = '';
+
+        if (!data.length) {
+            table.innerHTML = '<tr><td colspan="3">No requests</td></tr>';
+            return;
+        }
+
+        data.forEach(item => {
+            table.innerHTML += `
+            <tr>
+                <td>${item.student_name}</td>
+                <td>${item.reason}</td>
+                <td>
+                    <select onchange="updateLeave(${item.id}, this.value)">
+                        <option ${item.status==='Pending'?'selected':''}>Pending</option>
+                        <option ${item.status==='Approved'?'selected':''}>Approved</option>
+                        <option ${item.status==='Rejected'?'selected':''}>Rejected</option>
+                    </select>
+                </td>
+            </tr>`;
+        });
+    });
+}
+
+function loadSuggestions() {
+    fetch('http://127.0.0.1:5000/get_suggestions')
+    .then(res => res.json())
+    .then(data => {
+        const table = document.getElementById("suggestionTable");
+        table.innerHTML = data.length ?
+            data.map(item => `<tr><td>${item.message}</td></tr>`).join('')
+            : '<tr><td>No suggestions</td></tr>';
+    });
+}
+
+function loadSOS() {
+    fetch('http://127.0.0.1:5000/get_sos')
+    .then(res => res.json())
+    .then(data => {
+        const table = document.getElementById("sosTable");
+        table.innerHTML = data.length ?
+            data.map(item => `<tr><td>${item.student_name}</td><td>${item.time}</td></tr>`).join('')
+            : '<tr><td colspan="2">No alerts</td></tr>';
+    });
+}
+
+/* 🔥 FIXED UPDATE FUNCTIONS */
+function updateLeave(id, status) {
+    fetch('http://127.0.0.1:5000/update_leave_status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, status: status })
+    })
+    .then(res => res.json())
+    .then(() => {
+        loadLeave();
+    });
+}
+
+function updateComplaint(id, status) {
+    fetch('http://127.0.0.1:5000/update_complaint_status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, status: status })
+    })
+    .then(res => res.json())
+    .then(() => {
+        loadComplaints();
+    });
+}
+
+/* STARTUP */
+window.onload = loadDashboard;
+</script>
+
+</body>
+</html>

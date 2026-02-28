@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hostel Help - Student Portal</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    background: #fff6d1;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 220px;
+    background: #884f3b;
+    color: white;
+    height: 100vh;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    margin-bottom: 30px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar li {
+    padding: 12px 0;
+    cursor: pointer;
+}
+
+.sidebar li:hover {
+    background: #3749b3;
+    padding-left: 10px;
+}
+
+/* Main */
+.main {
+    flex: 1;
+    padding: 30px;
+}
+
+.card-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    width: 220px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+form {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 8px 0 15px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    background: #1e3a8a;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #3749b3;
+}
+
+.hidden {
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>🏠 Hostel Help</h2>
+    <ul>
+        <li onclick="showPage('dashboard')">Dashboard</li>
+        <li onclick="showPage('complaint')">Raise Complaint</li>
+        <li onclick="showPage('leave')">Request Leave</li>
+        <li onclick="showPage('suggestion')">Suggestion Box</li>
+        <li onclick="showPage('notifications')">Notifications</li>
+        <li onclick="showPage('food')">Food Rating</li>
+        <li onclick="showPage('sos')">Emergency SOS</li>
+    </ul>
+</div>
+
+<div class="main">
+
+<!-- Dashboard -->
+<div id="dashboard">
+    <h1>Student Dashboard</h1>
+    <div class="card-container">
+        <div class="card"><h3>📌 Complaints</h3></div>
+        <div class="card"><h3>📅 Leave Requests</h3></div>
+        <div class="card"><h3>💬 Suggestions</h3></div>
+        <div class="card"><h3>🍽 Food Rating</h3></div>
+    </div>
+</div>
+
+<!-- Complaint -->
+<div id="complaint" class="hidden">
+    <h2>Raise Complaint</h2>
+    <form onsubmit="submitForm(event)">
+        <select required>
+            <option>Electrical</option>
+            <option>Water</option>
+            <option>Room</option>
+        </select>
+        <textarea placeholder="Describe issue" required></textarea>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<!-- Leave -->
+<div id="leave" class="hidden">
+    <h2>Request Leave</h2>
+    <form onsubmit="submitForm(event)">
+        <input type="date" required>
+        <textarea placeholder="Reason" required></textarea>
+        <button type="submit">Apply</button>
+    </form>
+</div>
+
+<!-- Suggestion -->
+<div id="suggestion" class="hidden">
+    <h2>Anonymous Suggestion</h2>
+    <form onsubmit="submitForm(event)">
+        <textarea placeholder="Write suggestion..." required></textarea>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<div id="notifications" class="hidden">
+    <h2>🔔 Notifications</h2>
+    <div id="notificationBox">Loading...</div>
+</div>
+
+<!-- Food -->
+<div id="food" class="hidden">
+    <h2>Food Rating</h2>
+    <form onsubmit="submitForm(event)">
+        <select required>
+            <option>Breakfast</option>
+            <option>Lunch</option>
+            <option>Dinner</option>
+        </select>
+        <input type="number" min="1" max="5" placeholder="Rating (1-5)" required>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<!-- SOS -->
+<div id="sos" class="hidden">
+    <h2>🚨 Emergency SOS</h2>
+    <p>Press only in emergency situations.</p>
+    <button style="background:red; font-size:18px;"
+        onclick="alert('🚨 Emergency Alert Sent to Warden!')">
+        SEND SOS ALERT
+    </button>
+</div>
+
+</div>
+
+<script>
+function showPage(pageId) {
+    const pages = ['dashboard','complaint','leave','suggestion','food','sos','notifications'];
+    pages.forEach(page => document.getElementById(page).classList.add('hidden'));
+    document.getElementById(pageId).classList.remove('hidden');
+
+    if(pageId === 'notifications') loadNotifications();
+}
+
+/* -------- COMPLAINT -------- */
+document.querySelector("#complaint form").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const type = this.querySelector("select").value;
+    const description = this.querySelector("textarea").value;
+
+    fetch("http://127.0.0.1:5000/add_complaint", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            student_name: "Student1",
+            type: type,
+            description: description
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Complaint Submitted");
+        this.reset();
+    });
+});
+
+/* -------- LEAVE -------- */
+document.querySelector("#leave form").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const reason = this.querySelector("textarea").value;
+
+    fetch("http://127.0.0.1:5000/add_leave", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            student_name: "Student1",
+            reason: reason
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Leave Request Sent");
+        this.reset();
+    });
+});
+
+/* -------- SUGGESTION -------- */
+document.querySelector("#suggestion form").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const message = this.querySelector("textarea").value;
+
+    fetch("http://127.0.0.1:5000/add_suggestion", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ message: message })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Suggestion Submitted");
+        this.reset();
+    });
+});
+
+function loadNotifications() {
+    fetch("http://127.0.0.1:5000/get_student_notifications/Student1")
+    .then(res => res.json())
+    .then(data => {
+        let html = "";
+
+        data.complaints.forEach(c => {
+            html += `<p>📌 Complaint (${c.type}) - <b>${c.status}</b></p>`;
+        });
+
+        data.leave.forEach(l => {
+            html += `<p>📅 Leave Request - <b>${l.status}</b></p>`;
+        });
+
+        document.getElementById("notificationBox").innerHTML =
+            html || "No notifications yet.";
+    });
+}
+
+/* -------- SOS -------- */
+document.querySelector("#sos button").addEventListener("click", function(){
+
+    fetch("http://127.0.0.1:5000/add_sos", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            student_name: "Student1"
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("🚨 SOS Alert Sent to Warden!");
+    });
+
+});
+</script>
+
+</body>
+</html>
